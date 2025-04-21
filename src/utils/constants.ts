@@ -1,4 +1,4 @@
-export const API_URL = 'https://quan-ly-cong-viec.onrender.com';
+export const API_URL = 'https://quan-ly-cong-viec.onrender.com/api';
 
 export const TASK_STATUS = [
   { value: 'todo', label: 'Chuẩn bị làm' },
