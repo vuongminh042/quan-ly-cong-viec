@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.js';
 import taskRoutes from './routes/tasks.js';
 import projectRoutes from './routes/projects.js';
 import { fileURLToPath } from 'url';
+import path from 'path';
 import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
