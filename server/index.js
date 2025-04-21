@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import taskRoutes from './routes/tasks.js';
 import projectRoutes from './routes/projects.js';
+import path from 'path';
 
 dotenv.config();
 
@@ -14,6 +15,8 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(express.json());
 app.use(cors());
+
+app.use(express.static(path.join(__dirname, '../dist')));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/taskify')
