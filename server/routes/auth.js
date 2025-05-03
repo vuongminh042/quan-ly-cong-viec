@@ -33,7 +33,7 @@ router.post(
       const user = new User({
         name,
         email,
-        password
+        password: hashPassword(password)
       });
       
       await user.save();
