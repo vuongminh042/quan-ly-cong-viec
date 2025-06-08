@@ -182,7 +182,7 @@ const ProjectDetail = () => {
         </div>
         <div className="ml-auto flex gap-2">
           <button
-            onClick={() => navigate(`/projects/edit/${id}`)}
+            onClick={() => navigate('#')}
             className="btn btn-ghost flex items-center gap-1"
           >
             <Edit className="h-4 w-4" />
