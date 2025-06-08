@@ -5,48 +5,44 @@ import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get all tasks for current user
 router.get('/', authenticate, async (req, res) => {
   try {
     const tasks = await Task.find({ user: req.user._id })
       .sort({ createdAt: -1 });
-    
+
     res.json(tasks);
   } catch (error) {
-    console.error('Error fetching tasks:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Không lấy được dữ liệu:', error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi' });
   }
 });
 
-// Get a single task by ID
 router.get('/:id', authenticate, async (req, res) => {
   try {
-    const task = await Task.findOne({ 
+    const task = await Task.findOne({
       _id: req.params.id,
       user: req.user._id
     });
-    
+
     if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
+      return res.status(404).json({ message: 'Không tìm thấy công việc nào' });
     }
-    
+
     res.json(task);
   } catch (error) {
-    console.error('Error fetching task:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Không lấy được dữ liệu:', error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi' });
   }
 });
 
-// Create a new task
 router.post(
   '/',
   authenticate,
   [
-    body('title').notEmpty().withMessage('Title is required'),
-    body('dueDate').notEmpty().withMessage('Due date is required')
+    body('title').notEmpty().withMessage('Vui lòng nhập tiêu đề'),
+    body('dueDate').notEmpty().withMessage('Cần phải có ngày đến hạn')
   ],
   async (req, res) => {
-    // Validate input
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -54,7 +50,7 @@ router.post(
 
     try {
       const { title, description, status, priority, dueDate, project, labels } = req.body;
-      
+
       const task = new Task({
         title,
         description,
@@ -65,33 +61,32 @@ router.post(
         labels,
         user: req.user._id
       });
-      
+
       await task.save();
       res.status(201).json(task);
     } catch (error) {
-      console.error('Error creating task:', error);
-      res.status(500).json({ message: 'Server error' });
+      console.error('Không lấy được dữ liệu:', error);
+      res.status(500).json({ message: 'Đã xảy ra lỗi' });
     }
   }
 );
 
-// Update a task
 router.put(
   '/:id',
   authenticate,
   async (req, res) => {
     try {
-      const task = await Task.findOne({ 
+      const task = await Task.findOne({
         _id: req.params.id,
         user: req.user._id
       });
-      
+
       if (!task) {
-        return res.status(404).json({ message: 'Task not found' });
+        return res.status(404).json({ message: 'Không tìm thấy công việc nào' });
       }
-      
+
       const { title, description, status, priority, dueDate, project, labels } = req.body;
-      
+
       // Update only provided fields
       if (title) task.title = title;
       if (description !== undefined) task.description = description;
@@ -100,12 +95,12 @@ router.put(
       if (dueDate) task.dueDate = dueDate;
       if (project !== undefined) task.project = project || null;
       if (labels) task.labels = labels;
-      
+
       await task.save();
       res.json(task);
     } catch (error) {
-      console.error('Error updating task:', error);
-      res.status(500).json({ message: 'Server error' });
+      console.error('Đã xảy ra lỗi khi cập nhật công việc', error);
+      res.status(500).json({ message: 'Đã xảy ra lỗi' });
     }
   }
 );
@@ -113,20 +108,20 @@ router.put(
 // Delete a task
 router.delete('/:id', authenticate, async (req, res) => {
   try {
-    const task = await Task.findOne({ 
+    const task = await Task.findOne({
       _id: req.params.id,
       user: req.user._id
     });
-    
+
     if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
+      return res.status(404).json({ message: 'Không tìm thấy công việc nào' });
     }
-    
+
     await task.deleteOne();
-    res.json({ message: 'Task deleted successfully' });
+    res.json({ message: 'Đã xóa công việc thành công' });
   } catch (error) {
-    console.error('Error deleting task:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Đã xảy ra lỗi khi xóa công việc', error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi' });
   }
 });
 

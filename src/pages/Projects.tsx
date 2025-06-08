@@ -16,81 +16,83 @@ import { PROJECT_COLORS } from '../utils/constants';
 import toast from 'react-hot-toast';
 import { formatDate } from '../utils/helpers';
 
-interface ProjectFormData {
+interface DuAnFormData {
   name: string;
   description: string;
   color: string;
 }
 
-const Projects = () => {
+const DuAn = () => {
   const { projects, tasks, isLoading, fetchProjects, addProject, updateProject, deleteProject } = useTask();
-  const [showModal, setShowModal] = useState(false);
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [projectMenuOpen, setProjectMenuOpen] = useState<string | null>(null);
+  const [hienThiModal, setHienThiModal] = useState(false);
+  const [duAnHienTai, setDuAnHienTai] = useState<Project | null>(null);
+  const [dangGui, setDangGui] = useState(false);
+  const [menuDuAnMo, setMenuDuAnMo] = useState<string | null>(null);
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<ProjectFormData>();
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<DuAnFormData>();
 
   useEffect(() => {
     fetchProjects();
   }, []);
 
   useEffect(() => {
-    if (currentProject) {
-      setValue('name', currentProject.name);
-      setValue('description', currentProject.description);
-      setValue('color', currentProject.color);
+    if (duAnHienTai) {
+      setValue('name', duAnHienTai.name);
+      setValue('description', duAnHienTai.description);
+      setValue('color', duAnHienTai.color);
     }
-  }, [currentProject, setValue]);
+  }, [duAnHienTai, setValue]);
 
-  const openModal = (project: Project | null = null) => {
-    setCurrentProject(project);
-    if (!project) {
+  const moModal = (duAn: Project | null = null) => {
+    setDuAnHienTai(duAn);
+    if (!duAn) {
       reset({
         name: '',
         description: '',
         color: PROJECT_COLORS[0].value
       });
     }
-    setShowModal(true);
+    setHienThiModal(true);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setCurrentProject(null);
+  const dongModal = () => {
+    setHienThiModal(false);
+    setDuAnHienTai(null);
     reset();
   };
 
-  const onSubmit = async (data: ProjectFormData) => {
+  const onSubmit = async (data: DuAnFormData) => {
     try {
-      setIsSubmitting(true);
-      if (currentProject) {
-        await updateProject(currentProject._id, data);
-        toast.success('Project updated successfully');
+      setDangGui(true);
+      if (duAnHienTai) {
+        await updateProject(duAnHienTai._id, data);
+        toast.success('Cập nhật dự án thành công');
       } else {
         await addProject(data);
-        toast.success('Project created successfully');
+        toast.success('Tạo dự án thành công');
       }
-      closeModal();
+      dongModal();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      toast.error(currentProject ? 'Failed to update project' : 'Failed to create project');
+      toast.error(duAnHienTai ? 'Cập nhật dự án thất bại' : 'Tạo dự án thất bại');
     } finally {
-      setIsSubmitting(false);
+      setDangGui(false);
     }
   };
 
-  const handleDeleteProject = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this project?')) {
+  const handleXoaDuAn = async (id: string) => {
+    if (window.confirm('Bạn có chắc muốn xóa dự án này không?')) {
       try {
         await deleteProject(id);
-        toast.success('Project deleted successfully');
+        toast.success('Xóa dự án thành công');
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
-        toast.error('Failed to delete project');
+        toast.error('Xóa dự án thất bại');
       }
     }
   };
 
-  const getProjectTaskCount = (projectId: string) => {
+  const demSoCongViec = (projectId: string) => {
     return tasks.filter(task => task.project === projectId).length;
   };
 
@@ -102,7 +104,7 @@ const Projects = () => {
           <p className="text-gray-600">Quản lý các dự án của bạn và theo dõi tiến độ</p>
         </div>
         <button
-          onClick={() => openModal()}
+          onClick={() => moModal()}
           className="btn btn-primary flex items-center gap-1"
         >
           <Plus className="h-4 w-4" />
@@ -125,7 +127,7 @@ const Projects = () => {
           </p>
           <div className="mt-6">
             <button
-              onClick={() => openModal()}
+              onClick={() => moModal()}
               className="btn btn-primary flex items-center gap-1 mx-auto"
             >
               <Plus className="h-4 w-4" />
@@ -145,19 +147,19 @@ const Projects = () => {
                   </Link>
                   <div className="relative">
                     <button
-                      onClick={() => setProjectMenuOpen(projectMenuOpen === project._id ? null : project._id)}
+                      onClick={() => setMenuDuAnMo(menuDuAnMo === project._id ? null : project._id)}
                       className="p-1 rounded-full hover:bg-gray-100 focus:outline-none"
                     >
                       <MoreVertical className="h-5 w-5 text-gray-500" />
                     </button>
 
-                    {projectMenuOpen === project._id && (
+                    {menuDuAnMo === project._id && (
                       <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
                         <div className="py-1">
                           <button
                             onClick={() => {
-                              setProjectMenuOpen(null);
-                              openModal(project);
+                              setMenuDuAnMo(null);
+                              moModal(project);
                             }}
                             className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
@@ -166,8 +168,8 @@ const Projects = () => {
                           </button>
                           <button
                             onClick={() => {
-                              setProjectMenuOpen(null);
-                              handleDeleteProject(project._id);
+                              setMenuDuAnMo(null);
+                              handleXoaDuAn(project._id);
                             }}
                             className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                           >
@@ -183,7 +185,7 @@ const Projects = () => {
 
                 <div className="mt-6 flex justify-between items-center">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {getProjectTaskCount(project._id)} tasks
+                    {demSoCongViec(project._id)} công việc
                   </span>
                   <div className="text-sm text-gray-500 flex items-center">
                     <Clock className="h-4 w-4 mr-1" />
@@ -203,8 +205,8 @@ const Projects = () => {
         </div>
       )}
 
-      {/* Project Modal */}
-      {showModal && (
+      {/* Modal dự án */}
+      {hienThiModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div className="fixed inset-0 transition-opacity" aria-hidden="true">
@@ -217,10 +219,10 @@ const Projects = () => {
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-lg leading-6 font-medium text-gray-900">
-                        {currentProject ? 'Edit Project' : 'Create New Project'}
+                        {duAnHienTai ? 'Chỉnh sửa dự án' : 'Tạo dự án mới'}
                       </h3>
                       <button
-                        onClick={closeModal}
+                        onClick={dongModal}
                         className="text-gray-400 hover:text-gray-500"
                       >
                         <X className="h-5 w-5" />
@@ -233,7 +235,7 @@ const Projects = () => {
                           type="text"
                           id="name"
                           className="form-input"
-                          {...register('name', { required: 'Project name is required' })}
+                          {...register('name', { required: 'Tên dự án không được để trống' })}
                         />
                         {errors.name && <p className="form-error">{errors.name.message}</p>}
                       </div>
@@ -274,14 +276,14 @@ const Projects = () => {
                       <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                         <button
                           type="submit"
-                          disabled={isSubmitting}
+                          disabled={dangGui}
                           className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
                         >
-                          {isSubmitting ? 'Saving...' : currentProject ? 'Update Project' : 'Create Project'}
+                          {dangGui ? 'Đang lưu...' : duAnHienTai ? 'Cập nhật dự án' : 'Tạo dự án'}
                         </button>
                         <button
                           type="button"
-                          onClick={closeModal}
+                          onClick={dongModal}
                           className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm"
                         >
                           Hủy
@@ -299,4 +301,4 @@ const Projects = () => {
   );
 };
 
-export default Projects;
+export default DuAn;

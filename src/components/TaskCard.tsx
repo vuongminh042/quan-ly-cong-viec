@@ -18,10 +18,10 @@ const TaskCard = ({ task, onEdit }: TaskCardProps) => {
     try {
       setIsDeleting(true);
       await deleteTask(task._id);
-      toast.success('Task deleted successfully');
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      toast.success('Xóa công việc thành công');
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      toast.error('Failed to delete task');
+      toast.error('Xóa công việc thất bại');
     } finally {
       setIsDeleting(false);
     }
@@ -30,10 +30,12 @@ const TaskCard = ({ task, onEdit }: TaskCardProps) => {
   const handleStatusChange = async (status: 'todo' | 'in-progress' | 'completed') => {
     try {
       await updateTask(task._id, { status });
-      toast.success(`Task marked as ${status}`);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
+      const statusText = status === 'todo' ? 'Chuẩn bị làm' : status === 'in-progress' ? 'Đang làm' : 'Hoàn thành';
+      toast.success(`Công việc được đánh dấu là "${statusText}"`);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      toast.error('Failed to update task status');
+      toast.error('Cập nhật trạng thái công việc thất bại');
     }
   };
 
@@ -60,7 +62,7 @@ const TaskCard = ({ task, onEdit }: TaskCardProps) => {
                   className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   <Edit className="mr-3 h-4 w-4 text-gray-400" />
-                  Edit
+                  Sửa
                 </button>
                 <button
                   onClick={() => {
@@ -71,7 +73,7 @@ const TaskCard = ({ task, onEdit }: TaskCardProps) => {
                   className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                 >
                   <Trash2 className="mr-3 h-4 w-4 text-red-400" />
-                  {isDeleting ? 'Deleting...' : 'Delete'}
+                  {isDeleting ? 'Đang xóa...' : 'Xóa'}
                 </button>
               </div>
             </div>
@@ -84,18 +86,16 @@ const TaskCard = ({ task, onEdit }: TaskCardProps) => {
       )}
 
       <div className="flex flex-wrap gap-2 mb-4">
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-          statusColor(task.status).replace('bg-', 'bg-opacity-10 text-')
-        }`}>
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor(task.status).replace('bg-', 'bg-opacity-10 text-')
+          }`}>
           <span className={`mr-1.5 h-2 w-2 rounded-full ${statusColor(task.status)}`}></span>
-          {task.status === 'todo' ? 'To Do' : task.status === 'in-progress' ? 'In Progress' : 'Completed'}
+          {task.status === 'todo' ? 'Chuẩn bị làm' : task.status === 'in-progress' ? 'Đang làm' : 'Hoàn thành'}
         </span>
 
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-          priorityColor(task.priority).replace('bg-', 'bg-opacity-10 text-')
-        }`}>
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${priorityColor(task.priority).replace('bg-', 'bg-opacity-10 text-')
+          }`}>
           <span className={`mr-1.5 h-2 w-2 rounded-full ${priorityColor(task.priority)}`}></span>
-          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)} Priority
+          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
         </span>
 
         {task.labels && task.labels.map(label => (
@@ -110,13 +110,13 @@ const TaskCard = ({ task, onEdit }: TaskCardProps) => {
           <Clock className="h-4 w-4 mr-1" />
           <span>{formatDate(task.dueDate)}</span>
         </div>
-        
+
         <div className="flex space-x-2">
           {task.status !== 'completed' && (
             <button
               onClick={() => handleStatusChange('completed')}
               className="p-1 rounded-full text-gray-400 hover:text-green-500 focus:outline-none"
-              title="Mark as completed"
+              title="Đánh dấu đã hoàn thành"
             >
               <CheckCircle className="h-5 w-5" />
             </button>

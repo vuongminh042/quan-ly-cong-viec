@@ -3,11 +3,11 @@ import { format, isToday, isTomorrow, isYesterday, parseISO } from 'date-fns';
 export const formatDate = (dateString: string): string => {
   const date = parseISO(dateString);
   if (isToday(date)) {
-    return `Today, ${format(date, 'h:mm a')}`;
+    return `Hôm nay, ${format(date, 'h:mm a')}`;
   } else if (isTomorrow(date)) {
-    return `Tomorrow, ${format(date, 'h:mm a')}`;
+    return `Ngày mai, ${format(date, 'h:mm a')}`;
   } else if (isYesterday(date)) {
-    return `Yesterday, ${format(date, 'h:mm a')}`;
+    return `Hôm qua, ${format(date, 'h:mm a')}`;
   }
   return format(date, 'MMM d, yyyy');
 };

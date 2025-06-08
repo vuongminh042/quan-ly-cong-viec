@@ -113,14 +113,15 @@ const ProjectDetail = () => {
 
       if (currentTask) {
         await updateTask(currentTask._id, taskData);
-        toast.success('Task updated successfully');
+        toast.success('Cập nhật công việc thành công');
       } else {
         await addTask(taskData as any);
-        toast.success('Task created successfully');
+        toast.success('Tạo công việc thành công');
       }
       closeTaskModal();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      toast.error(currentTask ? 'Failed to update task' : 'Failed to create task');
+      toast.error(currentTask ? 'Cập nhật công việc thất bại' : 'Tạo công việc thất bại');
     } finally {
       setIsSubmitting(false);
     }
@@ -129,10 +130,11 @@ const ProjectDetail = () => {
   const handleDeleteProject = async () => {
     try {
       await deleteProject(id!);
-      toast.success('Project deleted successfully');
+      toast.success('Xóa dự án thành công');
       navigate('/projects');
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      toast.error('Failed to delete project');
+      toast.error('Xóa dự án thất bại');
     }
   };
 
@@ -291,8 +293,8 @@ const ProjectDetail = () => {
           <h3 className="mt-4 text-lg font-medium text-gray-900">Không tìm thấy công việc nào</h3>
           <p className="mt-2 text-gray-500">
             {filterStatus === 'all'
-              ? 'This project has no tasks yet.'
-              : `No ${filterStatus} tasks in this project.`}
+              ? 'Dự án này chưa có công việc nào.'
+              : `Không có nhiệm vụ ${filterStatus} trong dự án này.`}
           </p>
           <div className="mt-6">
             <button
@@ -326,7 +328,7 @@ const ProjectDetail = () => {
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-lg leading-6 font-medium text-gray-900">
-                        {currentTask ? 'Edit Task' : 'Create New Task'}
+                        {currentTask ? 'Cập nhật công việc' : 'Tạo công việc mới'}
                       </h3>
                       <button
                         onClick={closeTaskModal}
@@ -342,7 +344,7 @@ const ProjectDetail = () => {
                           type="text"
                           id="title"
                           className="form-input"
-                          {...register('title', { required: 'Title is required' })}
+                          {...register('title', { required: 'Vui lòng nhập tên công việc' })}
                         />
                         {errors.title && <p className="form-error">{errors.title.message}</p>}
                       </div>
@@ -394,7 +396,7 @@ const ProjectDetail = () => {
                           type="date"
                           id="dueDate"
                           className="form-input"
-                          {...register('dueDate', { required: 'Due date is required' })}
+                          {...register('dueDate', { required: 'Cần chọn ngày đến hạn' })}
                         />
                         {errors.dueDate && <p className="form-error">{errors.dueDate.message}</p>}
                       </div>
@@ -416,7 +418,7 @@ const ProjectDetail = () => {
                           disabled={isSubmitting}
                           className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
                         >
-                          {isSubmitting ? 'Saving...' : currentTask ? 'Update Task' : 'Create Task'}
+                          {isSubmitting ? 'Đang lưu...' : currentTask ? 'Cập nhật công việc' : 'Tạo công việc'}
                         </button>
                         <button
                           type="button"
