@@ -9,7 +9,6 @@ import Projects from './pages/Projects';
 import Register from './pages/Register';
 import Tasks from './pages/Tasks';
 
-// Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
 

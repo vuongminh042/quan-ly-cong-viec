@@ -100,8 +100,8 @@ const DuAn = () => {
     <div className="animate-slide-up">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dự án</h1>
-          <p className="text-gray-600">Quản lý các dự án của bạn và theo dõi tiến độ</p>
+          <h1 className="text-4xl font-bold text-white drop-shadow-lg">Dự án</h1>
+          <p className="text-white/90 text-lg">Quản lý các dự án của bạn và theo dõi tiến độ</p>
         </div>
         <button
           onClick={() => moModal()}

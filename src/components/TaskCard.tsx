@@ -19,7 +19,6 @@ const TaskCard = ({ task, onEdit }: TaskCardProps) => {
       setIsDeleting(true);
       await deleteTask(task._id);
       toast.success('Xóa công việc thành công');
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error('Xóa công việc thất bại');
     } finally {
@@ -33,7 +32,6 @@ const TaskCard = ({ task, onEdit }: TaskCardProps) => {
 
       const statusText = status === 'todo' ? 'Chuẩn bị làm' : status === 'in-progress' ? 'Đang làm' : 'Hoàn thành';
       toast.success(`Công việc được đánh dấu là "${statusText}"`);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error('Cập nhật trạng thái công việc thất bại');
     }
