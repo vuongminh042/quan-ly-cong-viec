@@ -3,15 +3,14 @@ import { useTask, Task } from '../contexts/TaskContext';
 import TaskCard from '../components/TaskCard';
 import { 
   LayoutGrid, 
-  ListFilter, 
-  Loader, 
   CheckCircle2, 
   Clock, 
   AlertTriangle,
   TrendingUp,
   Target,
   Zap,
-  Calendar
+  Calendar,
+  ChevronDown
 } from 'lucide-react';
 import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -24,12 +23,23 @@ import TaskAreaChart from '../components/charts/TaskAreaChart';
 const Dashboard = () => {
   const { tasks, projects, isLoading, fetchTasks, fetchProjects } = useTask();
   const [, setSelectedTask] = useState<Task | null>(null);
-  const [filter, setFilter] = useState('all');
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchTasks();
     fetchProjects();
   }, []);
+
+  // Toggle project expansion
+  const toggleProject = (projectId: string) => {
+    const newExpanded = new Set(expandedProjects);
+    if (newExpanded.has(projectId)) {
+      newExpanded.delete(projectId);
+    } else {
+      newExpanded.add(projectId);
+    }
+    setExpandedProjects(newExpanded);
+  };
 
   const dueTodayTasks = tasks.filter(task => {
     const dueDate = new Date(task.dueDate);
@@ -97,13 +107,12 @@ const Dashboard = () => {
     }));
   };
 
-  const filteredTasks = filter === 'all'
-    ? tasks
-    : filter === 'today'
-      ? dueTodayTasks
-      : filter === 'overdue'
-        ? overdueTasks
-        : tasks.filter(task => task.status === filter);
+  const tasksByProject = projects.map(project => ({
+    project,
+    tasks: tasks.filter(task => task.project === project._id)
+  })).filter(group => group.tasks.length > 0);
+
+  const tasksWithoutProject = tasks.filter(task => !task.project);
 
   return (
     <div className="min-h-screen p-6 animate-fade-in">
@@ -117,7 +126,6 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="stats-card animate-scale-in">
           <div className="flex justify-between items-start">
@@ -233,64 +241,136 @@ const Dashboard = () => {
 
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="lg:w-2/3">
-          <div className="mb-6 flex justify-between items-center">
+          <div className="mb-6">
             <h2 className="text-2xl font-bold text-white drop-shadow-lg">Công việc của tôi</h2>
-            <div className="flex space-x-2">
-              <div className="relative">
-                <select
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  className="appearance-none pl-4 pr-10 py-3 border-2 border-white/30 bg-white/90 backdrop-blur-md rounded-xl shadow-lg focus:outline-none focus:ring-4 focus:ring-purple-300 focus:border-purple-400 text-sm font-medium transition-all"
-                >
-                  <option value="all">Tất cả công việc</option>
-                  <option value="today">Đến hạn hôm nay</option>
-                  <option value="overdue">Quá hạn</option>
-                  <option value="todo">Chuẩn bị làm</option>
-                  <option value="in-progress">Đang làm</option>
-                  <option value="completed">Hoàn thành</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
-                  <ListFilter className="h-4 w-4" />
-                </div>
-              </div>
-            </div>
           </div>
 
           {isLoading ? (
             <div className="flex justify-center items-center h-64 glass-card-white rounded-2xl">
-              <Loader className="h-10 w-10 text-purple-500 animate-spin" />
+              <div className="h-10 w-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
-          ) : filteredTasks.length === 0 ? (
+          ) : tasks.length === 0 ? (
             <div className="glass-card-white rounded-2xl p-12 text-center">
               <div className="mx-auto w-20 h-20 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center mb-4">
                 <CheckCircle2 className="h-10 w-10 text-purple-500" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">Không tìm thấy công việc nào</h3>
-              <p className="text-gray-500">
-                {filter === 'all' ? 'Bạn chưa có công việc nào.' : `Bạn chưa có công việc nào thuộc loại "${filter}".`}
-              </p>
+              <p className="text-gray-500">Bạn chưa có công việc nào.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredTasks.slice(0, 6).map((task, index) => (
+            <div className="space-y-4">
+              {tasksByProject.map((group, groupIndex) => (
                 <div 
-                  key={task._id} 
-                  className="animate-scale-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  key={group.project._id} 
+                  className="glass-card-white rounded-2xl overflow-hidden animate-scale-in"
+                  style={{ animationDelay: `${groupIndex * 100}ms` }}
                 >
-                  <TaskCard task={task} onEdit={setSelectedTask} />
+                  <button
+                    onClick={() => toggleProject(group.project._id)}
+                    className="w-full p-4 flex items-center justify-between hover:bg-purple-50/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="h-10 w-10 rounded-lg flex items-center justify-center shadow-md" 
+                        style={{ 
+                          background: `linear-gradient(135deg, ${group.project.color} 0%, ${group.project.color}dd 100%)` 
+                        }}
+                      >
+                        <span className="text-white font-bold text-lg">
+                          {group.project.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="text-left">
+                        <h3 className="text-lg font-bold text-gray-900">{group.project.name}</h3>
+                        <p className="text-xs text-gray-500">{group.tasks.length} công việc</p>
+                      </div>
+                    </div>
+                    <ChevronDown 
+                      className={`h-5 w-5 text-gray-600 transition-transform duration-300 ${
+                        expandedProjects.has(group.project._id) ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+
+                  <div 
+                    className={`overflow-hidden transition-all duration-300 ${
+                      expandedProjects.has(group.project._id) ? 'max-h-[2000px]' : 'max-h-0'
+                    }`}
+                  >
+                    <div className="p-4 pt-0 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {group.tasks.slice(0, 6).map((task, taskIndex) => (
+                        <div 
+                          key={task._id}
+                          className="animate-fade-in"
+                          style={{ animationDelay: `${taskIndex * 50}ms` }}
+                        >
+                          <TaskCard task={task} onEdit={setSelectedTask} />
+                        </div>
+                      ))}
+                    </div>
+                    {group.tasks.length > 6 && (
+                      <div className="px-4 pb-4">
+                        <Link to={`/projects/${group.project._id}`}>
+                          <button className="w-full py-2 text-sm font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors">
+                            Xem tất cả {group.tasks.length} công việc
+                          </button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
-            </div>
-          )}
 
-          {filteredTasks.length > 6 && (
-            <div className="mt-6 text-center">
-              <Link to="/tasks">
-                <button className="btn btn-primary">
-                  Xem tất cả công việc ({filteredTasks.length})
-                </button>
-              </Link>
+              {tasksWithoutProject.length > 0 && (
+                <div className="glass-card-white rounded-2xl overflow-hidden">
+                  <button
+                    onClick={() => toggleProject('no-project')}
+                    className="w-full p-4 flex items-center justify-between hover:bg-purple-50/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg flex items-center justify-center shadow-md bg-gradient-to-br from-gray-400 to-gray-500">
+                        <LayoutGrid className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <h3 className="text-lg font-bold text-gray-900">Không thuộc dự án</h3>
+                        <p className="text-xs text-gray-500">{tasksWithoutProject.length} công việc</p>
+                      </div>
+                    </div>
+                    <ChevronDown 
+                      className={`h-5 w-5 text-gray-600 transition-transform duration-300 ${
+                        expandedProjects.has('no-project') ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+
+                  <div 
+                    className={`overflow-hidden transition-all duration-300 ${
+                      expandedProjects.has('no-project') ? 'max-h-[2000px]' : 'max-h-0'
+                    }`}
+                  >
+                    <div className="p-4 pt-0 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {tasksWithoutProject.slice(0, 6).map((task, taskIndex) => (
+                        <div 
+                          key={task._id}
+                          className="animate-fade-in"
+                          style={{ animationDelay: `${taskIndex * 50}ms` }}
+                        >
+                          <TaskCard task={task} onEdit={setSelectedTask} />
+                        </div>
+                      ))}
+                    </div>
+                    {tasksWithoutProject.length > 6 && (
+                      <div className="px-4 pb-4">
+                        <Link to="/tasks">
+                          <button className="w-full py-2 text-sm font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors">
+                            Xem tất cả {tasksWithoutProject.length} công việc
+                          </button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
