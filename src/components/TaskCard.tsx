@@ -1,46 +1,121 @@
-import { useState } from 'react';
-import { Task, useTask } from '../contexts/TaskContext';
-import { formatDate, priorityColor, statusColor } from '../utils/helpers';
-import { MoreVertical, Edit, Trash2, CheckCircle, Clock } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { useState } from "react";
+import { Task, useTask } from "../contexts/TaskContext";
+import { formatDate, priorityColor, statusColor } from "../utils/helpers";
+import { MoreVertical, Edit, Trash2, CheckCircle, Clock } from "lucide-react";
+import toast from "react-hot-toast";
+import StampAnimation from "./StampAnimation";
 
 interface TaskCardProps {
   task: Task;
   onEdit: (task: Task) => void;
 }
 
+const playStampSound = () => {
+  try {
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
+    const audioContext = new AudioContextClass();
+    const hitTime = audioContext.currentTime + 0.62;
+
+    const masterGain = audioContext.createGain();
+    masterGain.gain.setValueAtTime(0.22, hitTime);
+    masterGain.gain.exponentialRampToValueAtTime(0.001, hitTime + 0.22);
+    masterGain.connect(audioContext.destination);
+
+    const thump = audioContext.createOscillator();
+    const thumpGain = audioContext.createGain();
+    thump.type = "sine";
+    thump.frequency.setValueAtTime(120, hitTime);
+    thump.frequency.exponentialRampToValueAtTime(46, hitTime + 0.16);
+    thumpGain.gain.setValueAtTime(1, hitTime);
+    thumpGain.gain.exponentialRampToValueAtTime(0.001, hitTime + 0.18);
+    thump.connect(thumpGain);
+    thumpGain.connect(masterGain);
+    thump.start(hitTime);
+    thump.stop(hitTime + 0.2);
+
+    const noiseBuffer = audioContext.createBuffer(
+      1,
+      audioContext.sampleRate * 0.08,
+      audioContext.sampleRate,
+    );
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < data.length; i += 1) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+    }
+
+    const noise = audioContext.createBufferSource();
+    const noiseFilter = audioContext.createBiquadFilter();
+    const noiseGain = audioContext.createGain();
+    noise.buffer = noiseBuffer;
+    noiseFilter.type = "lowpass";
+    noiseFilter.frequency.setValueAtTime(900, hitTime);
+    noiseGain.gain.setValueAtTime(0.32, hitTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, hitTime + 0.09);
+    noise.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(masterGain);
+    noise.start(hitTime);
+    noise.stop(hitTime + 0.09);
+
+    window.setTimeout(() => void audioContext.close(), 1000);
+  } catch {
+    // Some browsers or user settings can block generated audio.
+  }
+};
+
 const TaskCard = ({ task, onEdit }: TaskCardProps) => {
   const { deleteTask, updateTask } = useTask();
   const [showMenu, setShowMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showStampHit, setShowStampHit] = useState(false);
 
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
       await deleteTask(task._id);
-      toast.success('Xóa công việc thành công');
+      toast.success("Xóa công việc thành công");
     } catch (error) {
-      toast.error('Xóa công việc thất bại');
+      toast.error("Xóa công việc thất bại");
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const handleStatusChange = async (status: 'todo' | 'in-progress' | 'completed') => {
+  const handleStatusChange = async (
+    status: "todo" | "in-progress" | "completed",
+  ) => {
     try {
       await updateTask(task._id, { status });
+      setShowStampHit(status === "completed");
+      if (status === "completed") {
+        playStampSound();
+      }
 
-      const statusText = status === 'todo' ? 'Chuẩn bị làm' : status === 'in-progress' ? 'Đang làm' : 'Hoàn thành';
+      const statusText =
+        status === "todo"
+          ? "Chuẩn bị làm"
+          : status === "in-progress"
+            ? "Đang làm"
+            : "Hoàn thành";
       toast.success(`Công việc được đánh dấu là "${statusText}"`);
     } catch (error) {
-      toast.error('Cập nhật trạng thái công việc thất bại');
+      toast.error("Cập nhật trạng thái công việc thất bại");
     }
   };
 
   return (
-    <div className={`card hover:shadow-card-hover ${task.priority ? `task-priority-${task.priority}` : ''}`}>
+    <div
+      className={`card relative hover:shadow-card-hover ${task.priority ? `task-priority-${task.priority}` : ""}`}
+    >
+      {task.status === "completed" && <StampAnimation animate={showStampHit} />}
+
       <div className="flex justify-between items-start mb-2">
-        <h3 className="text-lg font-medium text-gray-900 truncate">{task.title}</h3>
+        <h3 className="text-lg font-medium text-gray-900 truncate">
+          {task.title}
+        </h3>
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
@@ -71,7 +146,7 @@ const TaskCard = ({ task, onEdit }: TaskCardProps) => {
                   className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                 >
                   <Trash2 className="mr-3 h-4 w-4 text-red-400" />
-                  {isDeleting ? 'Đang xóa...' : 'Xóa'}
+                  {isDeleting ? "Đang xóa..." : "Xóa"}
                 </button>
               </div>
             </div>
@@ -84,23 +159,41 @@ const TaskCard = ({ task, onEdit }: TaskCardProps) => {
       )}
 
       <div className="flex flex-wrap gap-2 mb-4">
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor(task.status).replace('bg-', 'bg-opacity-10 text-')
-          }`}>
-          <span className={`mr-1.5 h-2 w-2 rounded-full ${statusColor(task.status)}`}></span>
-          {task.status === 'todo' ? 'Chuẩn bị làm' : task.status === 'in-progress' ? 'Đang làm' : 'Hoàn thành'}
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor(
+            task.status,
+          ).replace("bg-", "bg-opacity-10 text-")}`}
+        >
+          <span
+            className={`mr-1.5 h-2 w-2 rounded-full ${statusColor(task.status)}`}
+          ></span>
+          {task.status === "todo"
+            ? "Chuẩn bị làm"
+            : task.status === "in-progress"
+              ? "Đang làm"
+              : "Hoàn thành"}
         </span>
 
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${priorityColor(task.priority).replace('bg-', 'bg-opacity-10 text-')
-          }`}>
-          <span className={`mr-1.5 h-2 w-2 rounded-full ${priorityColor(task.priority)}`}></span>
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${priorityColor(
+            task.priority,
+          ).replace("bg-", "bg-opacity-10 text-")}`}
+        >
+          <span
+            className={`mr-1.5 h-2 w-2 rounded-full ${priorityColor(task.priority)}`}
+          ></span>
           {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
         </span>
 
-        {task.labels && task.labels.map(label => (
-          <span key={label} className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
-            {label}
-          </span>
-        ))}
+        {task.labels &&
+          task.labels.map((label) => (
+            <span
+              key={label}
+              className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800"
+            >
+              {label}
+            </span>
+          ))}
       </div>
 
       <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
@@ -110,9 +203,9 @@ const TaskCard = ({ task, onEdit }: TaskCardProps) => {
         </div>
 
         <div className="flex space-x-2">
-          {task.status !== 'completed' && (
+          {task.status !== "completed" && (
             <button
-              onClick={() => handleStatusChange('completed')}
+              onClick={() => handleStatusChange("completed")}
               className="p-1 rounded-full text-gray-400 hover:text-green-500 focus:outline-none"
               title="Đánh dấu đã hoàn thành"
             >
